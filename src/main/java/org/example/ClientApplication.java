@@ -8,7 +8,6 @@ import org.h2.util.StringUtils;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Objects;
 import java.util.Scanner;
 
 
@@ -30,9 +29,8 @@ public class ClientApplication {
             try (Scanner input = new Scanner(client.getSocket().getInputStream())) {
                 while (true) {
                     String message = input.nextLine();
-                    //if(MessageHandler.isIdExchange(message)) {clientSocket.setId(MessageHandler.getId(message)); break;};
                     if(MessageHandler.isIdExchange(message)) client.setId(MessageHandler.getId(message));
-                    System.out.println(input.nextLine());
+                    if(MessageHandler.isMessageTo(message)) System.out.println(MessageHandler.getValue(message));
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -44,14 +42,17 @@ public class ClientApplication {
             try (PrintWriter output = new PrintWriter(client.getSocket().getOutputStream(), true)) {
                 output.println(MessageHandler.setupCLientName(client.getName()));
                 while (true) {
-                    System.out.println("Пошлите сообщение(для конкретного пользоватеял используйте @<id>):");
-                    String consoleInput = consoleScanner.nextLine();
+                    System.out.println("Выбирете получателя сообщение(для всех оставьте пустым):");
+                    System.out.println("@:");
+                    String addressInput = consoleScanner.nextLine();
+                    Long id = -1L;
+                    if(!addressInput.isEmpty()) id = Long.getLong(addressInput);
 
-                    output.println(consoleInput);
-                    if (Objects.equals("q", consoleInput)) {
-                        client.getSocket().close();
-                        break;
-                    }
+                    System.out.println("Напечатайте сообщение:");
+                    String message = consoleScanner.nextLine();
+
+                    output.println(MessageHandler.setupMessage(message, id, client.getId()));
+
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);

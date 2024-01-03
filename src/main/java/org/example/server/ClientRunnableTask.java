@@ -1,11 +1,10 @@
 package org.example.server;
 
+import org.example.domain.MessageData;
 import org.example.domain.MessageHandler;
 
 import java.io.PrintWriter;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class ClientRunnableTask implements Runnable{
 
@@ -36,8 +35,19 @@ public class ClientRunnableTask implements Runnable{
                 }
 
                 if(MessageHandler.isMessageTo(clientInput)) {
-                    System.out.println(MessageHandler.getValue(clientInput));                }
-
+                    MessageData messageData = MessageHandler.getMessageAndAddressee(clientInput);
+                    String message = MessageHandler.setupMessage(String.format("Клиент с id %s написал Вам сообщение:\n%s\n", messageData.sourceId(), messageData.message()));
+                    if(messageData.targetId()==-1L) {
+                        clients.values().forEach(client -> {
+                            if(client.getId()!=currentClient.getId()) {
+                                client.getOutput().println(message);
+                            }
+                        });
+                    } else {
+                        SocketWrapper addressee = clients.get(messageData.targetId());
+                        if (Objects.nonNull(addressee)) addressee.getOutput().println(message);
+                    }
+                }
 
                 if (Objects.equals("q", clientInput)) {
                     // todo разослать это сообщение всем остальным клиентам
@@ -46,10 +56,6 @@ public class ClientRunnableTask implements Runnable{
                     break;
                 }
 
-                // формат сообщения: "цифра сообщение"
-                //long destinationId = Long.parseLong(clientInput.substring(0, 1));
-                //SocketWrapper destination = clients.get(destinationId);
-                //destination.getOutput().println(clientInput);
             }
         }
     }
