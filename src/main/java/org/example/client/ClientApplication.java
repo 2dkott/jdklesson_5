@@ -1,4 +1,4 @@
-package org.example;
+package org.example.client;
 
 import lombok.Getter;
 import org.example.domain.MessageHandler;
